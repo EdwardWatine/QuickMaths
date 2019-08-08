@@ -1,0 +1,2 @@
+PLUS_MINUS = "\u00B1"
+MINUS_PLUS = "\u2213"

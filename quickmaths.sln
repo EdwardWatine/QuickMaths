@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "quickmaths app", "PythonApplication1\quickmaths app.pyproj", "{1A56A805-C504-48EE-91F4-C43C1B534884}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A56A805-C504-48EE-91F4-C43C1B534884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A56A805-C504-48EE-91F4-C43C1B534884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {41EF3A8B-7EB4-4001-B968-5EE57239D523}
+	EndGlobalSection
+EndGlobal
