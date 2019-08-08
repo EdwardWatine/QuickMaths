@@ -17,6 +17,3 @@ if __name__=='__main__':
     normalAtX(NumFrac(5, 1), NumFrac(-3, 1), NumFrac(-6, 1)).print()
     #coefficient finding +
     #equation casting
-
-def profile():
-    cProfile.run('tokenize("(3x^5-2x^3-5x)/x=5x").solve("x")', sort=pstats.SortKey.CUMULATIVE)
