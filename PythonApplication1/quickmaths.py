@@ -122,11 +122,7 @@ class chainBase:
     def print(self):
         print(self)
     def substitute(self, **kwargs):
-        changed = set(x.substitute(**kwargs) for x in self.allargs())
-
-        if changed==set(self.allargs()):
-            return self.function()(*changed)
-        return self
+        return self.function()(*(x.substitute(**kwargs) for x in self.allargs()))
     def __neg__(self):
         return mult(-1, self)
     def __mul__(self, y):
@@ -157,16 +153,7 @@ class chainBase:
 def fractize(num):
     if isNum(num):
         return num
-    num = str(num)
-    fp = num.split(".")
-    if not fp[0]:
-        num = 0
-    else:
-        num = int(fp[0])
-    if len(fp)==1 or not fp[1]:
-        return NumFrac(num, 1)
-    else:
-        return NumFrac(num*10**len(fp[1])+int(fp[1]), 10**len(fp[1]))
+    return NumFrac(*float(num).as_integer_ratio())
   
     
 @autofactor
@@ -175,7 +162,7 @@ def add(*args, factor=False):
     new = []
     for x in args:
         if isNum(x) and x.isZero():
-                continue
+            continue
         for index, y in enumerate(new):
             if x.varcode==y.varcode:
                 new[index] = y.add(x.coef)
@@ -231,6 +218,8 @@ class NumFrac(chainBase):
         return False
     def substitute(self, **kwargs):
         return self
+    def differentiate(self, subject):
+        return NumFrac(0, 1)
     def __abs__(self):
         return NumFrac(abs(self.num), self.den)
     def __str__(self):
@@ -289,6 +278,10 @@ class Var(chainBase):
         return power(self, other.exp.add(NumFrac(1, 1)))
     def divide(self, other):
         return power(self, NumFrac(1, 1).subtract(other.exp))
+    def differentiate(self, subject):
+        if subject==self.var:
+            return NumFrac(1, 1)
+        return NumFrac(0, 1)
 
 class I(Var):
     def __init__(self):
@@ -324,24 +317,23 @@ class addChain(chainBase):
     def canMult(self, other):
         if self.varcode in other.varlist:
             return True
-        if not isinstance(other, addChain):
+        if not isinstance(other, (addChain, powerPair)):
             return True
         return False
     def removefactor(self, other):
         return addChain(*(x.divide(other) for x in self.args))
     def divide(self, other):
-        nargs = []
+        nargs = [self]
         if all(x.canMult(other) for x in self.args):
-            return addChain(*(x.divide(other) for x in self.args))
-        for x in other.multargs():
+            return addChain(*(x.divide(other) for x in self.args)) #Cleared by factor instead?
+        for x in other.multargs(): # REDO mAYBE # To factor or not to factor?
             if self.varcode in x.varlist:
+                nargs[0] = (mult(-1, power(self, nargs[0].exp.subtract(x.exp))))
                 if isinstance(x, addChain):
                     if self.varcode==x.neg:
-                        nargs.append(mult(-1, power(self, self.exp.subtract(x.exp))))
-                nargs.append(power(self, self.exp.subtract(x.exp)))
+                        nargs[0] = -nargs[0]
             else:
                 nargs.append(power(x, -1))
-
         return mult(*nargs)
         """if self.varcode in other.varlist:
             if isinstance(other, addChain):
@@ -361,6 +353,8 @@ class addChain(chainBase):
         return add(*cartFunc(self.chain(), other.chain(), mult))
     def contains(self, x):
         return any(y.contains(x) for y in self.allargs())
+    def differentiate(self, subject):
+        return add(*(x.differentiate(subject) for x in self.args))
     def __str__(self):
         strs = [self.args[0].genstr(self)]
         for x in self.args[1:]:
@@ -462,6 +456,15 @@ class multChain(chainBase):
             new = new.mult_through(x)
         assert isinstance(new, addChain)
         return new
+    def differentiate(self, subject):
+        oArgs = self.allargs()
+        args = oArgs[:]
+        new = []
+        for x in range(len(args)):
+            args[x] = args[x].differentiate(subject)
+            args[x-1] = oArgs[x-1]
+            new.append(mult(*args))
+        return add(*new)
     @staticmethod
     def inverse(x):
         return power(x, -1)
@@ -567,7 +570,9 @@ class powerPair(chainBase):
         return power(m, math.copysign(1, self.exp.num))
     def substitute(self, **kwargs):
         return power(self.base.substitute(**kwargs), self.exp.substitute(**kwargs), positive_root=True)
-
+    def differentiate(self, subject): #NEEDS LN!
+        if isinstance(self.base, Var) and self.base.var==subject:
+            return mult(self.exp, power(self.base, self.exp-1))
     def allargs(self):
         return (self,)
     def multargs(self):

@@ -5,16 +5,21 @@ import sys
 import pstats
 import cProfile
 
-def normalAtX(m, c, x):
-    y = m*x+c
+line = tokenize("y=mx+c")
+def normalAtX(curve, x):
+    m = curve.differentiate("x").substitute(x=x)
+    if m==0:
+        return equality(Var("x"), fractize(x))
     new_m = -1/m
-    new_c = y-new_m*x
-    return equality(Var("y"), new_m*Var("x")+new_c)
+    c = line.solve("c", y=curve.substitute(x=x), m=new_m, x=x)
+    return line.substitute(m=new_m, c=c)
+
+
 
 if __name__=='__main__':
     t = tokenize("2x^3-30x^2+162x=0")
     print(t.solve("x"))
-    normalAtX(NumFrac(5, 1), NumFrac(-3, 1), NumFrac(-6, 1)).print()
+    normalAtX(tokenize("3x^3-2x^2-6x+2"), 1).print()
     #coefficient finding +
     #equation casting
 
